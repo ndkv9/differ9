@@ -1,0 +1,50 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  deployment_pipeline:
+    runs-on: ubuntu-latest
+
+    env:
+      SKIP_COMMITS: ${{ !contains(join(toJson(github.event.commits.*.message), ', '), '#skip') }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: npm install
+        run: npm install
+
+      - name: lint
+        run: npm run lint
+
+      - name: build
+        run: npm run build
+
+      - uses: actions/checkout@v2
+        if: ${{ github.event_name == 'push' }}
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@eca2b69f9e2c24be7decccd0f15fdb1ea5906598
+        if: ${{ github.event_name == 'push' && env.SKIP_COMMITS }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
+          DRY_RUN: false
+          WITH_V: true
+          INITIAL_VERSION: 0.0.0
+          TAG_CONTEXT: repo
+          RELEASE_BRANCHES: main
+          SOURCE: .
+          VERBOSE: true
