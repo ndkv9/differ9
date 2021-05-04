@@ -4,3 +4,12 @@ const getSentences = paragraph => {
 
 	return sentences
 }
+
+const getCommon = (s1, s2) => {
+	const arr1 = s1.split(' ')
+	const arr2 = s2.split(' ')
+
+	const commons = arr2.filter(item => arr1.includes(item))
+
+	console.log(commons)
+}
